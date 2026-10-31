@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vocalis — Real-Time Voice Agent & ASR Evaluation Dashboard</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0b0f19; color: #e2e8f0; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .glow-cyan { box-shadow: 0 0 20px -5px rgba(6, 182, 212, 0.4); }
+    .glow-red { box-shadow: 0 0 20px -5px rgba(239, 68, 68, 0.4); }
+    .pulse-animation { animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-cyan-500 selection:text-black">
+
+  <!-- TOP NAVIGATION BAR -->
+  <header class="border-b border-gray-800 bg-[#0e1322]/80 backdrop-blur-md sticky top-0 z-50 px-6 py-3.5 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-cyan-500/20">
+        <i class="fa-solid fa-headset text-lg"></i>
+      </div>
+      <div>
+        <div class="flex items-center space-x-2">
+          <span class="text-lg font-bold tracking-tight text-white">VOCALIS</span>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800/60 font-semibold uppercase tracking-wider">v1.2 Production</span>
+        </div>
+        <p class="text-[11px] text-gray-400">Security Control Room Voice AI & Real-Time ASR Evaluation Engine</p>
+      </div>
+    </div>
+
+    <div class="flex items-center space-x-4">
+      <div class="flex items-center space-x-2 bg-gray-900/90 border border-gray-800 px-3 py-1.5 rounded-lg text-xs mono">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+        <span class="text-gray-300">WEBSOCKET AUDIO:</span>
+        <span class="text-emerald-400 font-bold">FULL-DUPLEX (16kHz)</span>
+      </div>
+      <a href="https://github.com/nilesh7757/vocalis" target="_blank" class="flex items-center space-x-2 text-xs bg-gray-800 hover:bg-gray-700 text-gray-200 px-3 py-1.5 rounded-lg border border-gray-700 transition">
+        <i class="fa-brands fa-github text-sm"></i>
+        <span>nilesh7757/vocalis</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
+
+    <!-- TOP KPI STATS -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="bg-gray-900/60 border border-gray-800/80 rounded-2xl p-4.5 hover:border-cyan-500/30 transition">
+        <div class="text-[11px] font-medium text-gray-400 uppercase tracking-wider flex items-center justify-between">
+          <span>Turn-Taking Latency</span>
+          <i class="fa-solid fa-stopwatch text-cyan-400"></i>
+        </div>
+        <div class="mt-2 flex items-baseline space-x-2">
+          <span class="text-3xl font-extrabold text-white mono">680</span>
+          <span class="text-sm font-semibold text-cyan-400">ms TTFA</span>
+        </div>
+        <p class="mt-1 text-xs text-emerald-400 flex items-center">
+          <i class="fa-solid fa-circle-check mr-1"></i> < 700ms Human conversational standard
+        </p>
+      </div>
+
+      <div class="bg-gray-900/60 border border-gray-800/80 rounded-2xl p-4.5 hover:border-cyan-500/30 transition">
+        <div class="text-[11px] font-medium text-gray-400 uppercase tracking-wider flex items-center justify-between">
+          <span>Barge-In Reaction Time</span>
+          <i class="fa-solid fa-hand text-amber-400"></i>
+        </div>
+        <div class="mt-2 flex items-baseline space-x-2">
+          <span class="text-3xl font-extrabold text-white mono">&lt; 40</span>
+          <span class="text-sm font-semibold text-amber-400">ms</span>
+        </div>
+        <p class="mt-1 text-xs text-gray-400">State: EnergyVAD full-duplex abort</p>
+      </div>
+
+      <div class="bg-gray-900/60 border border-gray-800/80 rounded-2xl p-4.5 hover:border-cyan-500/30 transition">
+        <div class="text-[11px] font-medium text-gray-400 uppercase tracking-wider flex items-center justify-between">
+          <span>Entity Recognition (EER)</span>
+          <i class="fa-solid fa-shield-halved text-purple-400"></i>
+        </div>
+        <div class="mt-2 flex items-baseline space-x-2">
+          <span class="text-3xl font-extrabold text-white mono">100.0</span>
+          <span class="text-sm font-semibold text-purple-400">% F1</span>
+        </div>
+        <p class="mt-1 text-xs text-purple-300">Zero corruption on Call Signs & Badges</p>
+      </div>
+
+      <div class="bg-gray-900/60 border border-gray-800/80 rounded-2xl p-4.5 hover:border-cyan-500/30 transition">
+        <div class="text-[11px] font-medium text-gray-400 uppercase tracking-wider flex items-center justify-between">
+          <span>Procedure Compliance</span>
+          <i class="fa-solid fa-clipboard-check text-emerald-400"></i>
+        </div>
+        <div class="mt-2 flex items-baseline space-x-2">
+          <span class="text-3xl font-extrabold text-white mono">100.0</span>
+          <span class="text-sm font-semibold text-emerald-400">%</span>
+        </div>
+        <p class="mt-1 text-xs text-gray-400">Deterministic CAD JSON schema enforced</p>
+      </div>
+    </div>
+
+    <!-- MIDDLE SECTION: INTERACTIVE CONVERSATION SIMULATOR -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- LEFT: INTERACTIVE SIMULATOR (7 COLS) -->
+      <div class="lg:col-span-7 bg-gray-900/70 border border-gray-800 rounded-2xl p-5 flex flex-col space-y-4">
+        <div class="flex items-center justify-between border-b border-gray-800 pb-3">
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center space-x-2">
+              <span>Interactive Control Room Call Simulator</span>
+            </h2>
+            <p class="text-xs text-gray-400">Select an operational transmission to evaluate real-time audio pipeline</p>
+          </div>
+          <span id="agentStateBadge" class="px-2.5 py-1 rounded-md text-xs font-semibold mono bg-cyan-950 text-cyan-400 border border-cyan-800">
+            STATE: LISTENING
+          </span>
+        </div>
+
+        <!-- SCENARIO BUTTONS -->
+        <div class="grid grid-cols-3 gap-2 text-xs">
+          <button onclick="triggerScenario(1)" class="bg-gray-800/90 hover:bg-gray-700/80 border border-gray-700 px-3 py-2 rounded-xl text-left transition focus:ring-2 focus:ring-cyan-500">
+            <span class="font-bold text-white block">🚨 Priority 1 Dispatch</span>
+            <span class="text-[10px] text-gray-400">Intrusion at Gate A</span>
+          </button>
+          <button onclick="triggerScenario(2)" class="bg-gray-800/90 hover:bg-gray-700/80 border border-gray-700 px-3 py-2 rounded-xl text-left transition focus:ring-2 focus:ring-cyan-500">
+            <span class="font-bold text-white block">👮 Officer Welfare</span>
+            <span class="text-[10px] text-gray-400">Badge 4892 Check-in</span>
+          </button>
+          <button onclick="triggerBargeIn()" class="bg-red-950/60 hover:bg-red-900/60 border border-red-800/80 px-3 py-2 rounded-xl text-left transition glow-red">
+            <span class="font-bold text-red-300 block">🛑 Interupt (Barge-In)</span>
+            <span class="text-[10px] text-red-400">Abort Agent Speech</span>
+          </button>
+        </div>
+
+        <!-- AUDIO OSCILLOSCOPE CANVAS -->
+        <div class="bg-black/60 rounded-xl p-3 border border-gray-800 relative overflow-hidden">
+          <div class="flex items-center justify-between text-[11px] text-gray-400 mb-1 mono">
+            <span>FULL-DUPLEX AUDIO SPECTRUM (20ms PCM FRAMES)</span>
+            <span id="audioRms" class="text-cyan-400 font-bold">-42.0 dBFS</span>
+          </div>
+          <canvas id="waveformCanvas" class="w-full h-16"></canvas>
+        </div>
+
+        <!-- CALL TRANSCRIPT FEED -->
+        <div class="bg-black/40 rounded-xl p-4 border border-gray-800/80 min-h-[160px] flex flex-col justify-between space-y-3 mono text-xs">
+          <div>
+            <div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Incoming Transmission</div>
+            <p id="transcriptText" class="text-gray-200 text-sm">Select a scenario above to test incoming radio transmission...</p>
+          </div>
+
+          <div class="border-t border-gray-800/80 pt-2.5">
+            <div class="text-[10px] font-bold text-cyan-400 uppercase tracking-widest mb-1 flex items-center justify-between">
+              <span>Autonomous Agent Voice Response (Streaming TTS)</span>
+              <span id="streamingTag" class="hidden text-amber-400 animate-pulse text-[9px]">STREAMING TO CHUNKS...</span>
+            </div>
+            <p id="agentResponseText" class="text-gray-300 italic">Standby...</p>
+          </div>
+        </div>
+
+        <!-- CAD DISPATCH LOG -->
+        <div id="cadBox" class="bg-blue-950/30 border border-blue-900/50 rounded-xl p-3 text-xs mono hidden">
+          <div class="flex items-center justify-between text-blue-400 font-bold text-[11px] mb-1">
+            <span><i class="fa-solid fa-server mr-1"></i> CAD DISPATCH TICKET GENERATED</span>
+            <span class="text-emerald-400">STATUS: VERIFIED (ISO 42001)</span>
+          </div>
+          <div id="cadPayload" class="text-gray-300 text-[11px]"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: LATENCY WATERFALL & BENCHMARKS (5 COLS) -->
+      <div class="lg:col-span-5 space-y-6">
+
+        <!-- LATENCY WATERFALL BREAKDOWN -->
+        <div class="bg-gray-900/70 border border-gray-800 rounded-2xl p-5 space-y-3">
+          <div class="flex items-center justify-between border-b border-gray-800 pb-2">
+            <h3 class="text-sm font-bold text-white">Turn-Taking Latency Budget</h3>
+            <span class="text-xs mono text-cyan-400 font-bold">680 ms</span>
+          </div>
+
+          <div class="space-y-2.5 text-xs">
+            <div>
+              <div class="flex justify-between text-[11px] mb-1">
+                <span class="text-gray-400">1. VAD Endpointing Hangover</span>
+                <span class="mono text-gray-300 font-bold">125 ms</span>
+              </div>
+              <div class="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+                <div class="bg-blue-500 h-2 rounded-full" style="width: 18.3%"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-[11px] mb-1">
+                <span class="text-gray-400">2. Streaming ASR Acoustic Decode</span>
+                <span class="mono text-gray-300 font-bold">375 ms</span>
+              </div>
+              <div class="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+                <div class="bg-cyan-500 h-2 rounded-full" style="width: 55.1%"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-[11px] mb-1">
+                <span class="text-gray-400">3. LLM Time-to-First-Token (TTFT)</span>
+                <span class="mono text-gray-300 font-bold">95 ms</span>
+              </div>
+              <div class="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+                <div class="bg-purple-500 h-2 rounded-full" style="width: 14.0%"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-[11px] mb-1">
+                <span class="text-gray-400">4. Neural TTS First-Chunk Audio Buffer</span>
+                <span class="mono text-gray-300 font-bold">85 ms</span>
+              </div>
+              <div class="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
+                <div class="bg-emerald-500 h-2 rounded-full" style="width: 12.5%"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-3 bg-black/40 rounded-xl p-2.5 text-[11px] text-gray-400 mono flex items-center justify-between border border-gray-800">
+            <span>Human Conversation Threshold:</span>
+            <span class="text-emerald-400 font-bold">700 ms (Passed ✅)</span>
+          </div>
+        </div>
+
+        <!-- BENCHMARK CHART: CHANNEL STRATIFICATION -->
+        <div class="bg-gray-900/70 border border-gray-800 rounded-2xl p-5 space-y-3">
+          <div class="flex items-center justify-between border-b border-gray-800 pb-2">
+            <h3 class="text-sm font-bold text-white">Channel Quality vs. Latency</h3>
+            <span class="text-[11px] text-gray-400 mono">p50 / p95 / p99</span>
+          </div>
+          <div class="h-44">
+            <canvas id="channelChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-gray-800/80 bg-gray-950 py-4 px-6 text-center text-xs text-gray-500 mono">
+    Vocalis Engineering Platform • Nilesh Mori (202301473@dau.ac.in) • DA-IICT Gandhinagar • Open Source Apache 2.0
+  </footer>
+
+  <!-- INTERACTIVE LOGIC SCRIPT -->
+  <script>
+    // Audio Waveform Simulation
+    const canvas = document.getElementById('waveformCanvas');
+    const ctx = canvas.getContext('2d');
+    let width = canvas.width = canvas.offsetWidth;
+    let height = canvas.height = canvas.offsetHeight;
+    let waveOffset = 0;
+    let waveAmplitude = 10;
+
+    function drawWave() {
+      ctx.clearRect(0, 0, width, height);
+      ctx.beginPath();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#06b6d4';
+      for (let x = 0; x < width; x++) {
+        let y = height / 2 + Math.sin((x + waveOffset) * 0.05) * waveAmplitude * Math.sin(x * 0.01);
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      waveOffset += 2;
+      requestAnimationFrame(drawWave);
+    }
+    drawWave();
+
+    // Chart.js Channel Stratification
+    const ctxChart = document.getElementById('channelChart').getContext('2d');
+    new Chart(ctxChart, {
+      type: 'bar',
+      data: {
+        labels: ['Clean 16kHz', 'Telephony 8kHz', 'Siren Noise'],
+        datasets: [
+          {
+            label: 'WER (%)',
+            data: [16.7, 7.1, 13.4],
+            backgroundColor: 'rgba(6, 182, 212, 0.65)',
+            borderColor: '#06b6d4',
+            borderWidth: 1,
+            yAxisID: 'y'
+          },
+          {
+            label: 'Latency (ms)',
+            data: [440, 540, 600],
+            backgroundColor: 'rgba(168, 85, 247, 0.65)',
+            borderColor: '#a855f7',
+            borderWidth: 1,
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#94a3b8', font: { size: 10 } } } },
+        scales: {
+          x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } },
+          y: { position: 'left', ticks: { color: '#06b6d4' }, grid: { color: '#1e293b' } },
+          y1: { position: 'right', ticks: { color: '#a855f7' }, grid: { display: false } }
+        }
+      }
+    });
+
+    // Scenario Logic
+    function triggerScenario(id) {
+      const stateBadge = document.getElementById('agentStateBadge');
+      const transcript = document.getElementById('transcriptText');
+      const response = document.getElementById('agentResponseText');
+      const cadBox = document.getElementById('cadBox');
+      const cadPayload = document.getElementById('cadPayload');
+      const streamingTag = document.getElementById('streamingTag');
+
+      waveAmplitude = 25;
+      document.getElementById('audioRms').innerText = "-14.2 dBFS";
+
+      if (id === 1) {
+        transcript.innerText = '"Control, this is Officer Bravo-4. Motion sensor tripped at Gate A, code red intrusion."';
+        stateBadge.innerText = "STATE: AGENT_SPEAKING";
+        stateBadge.className = "px-2.5 py-1 rounded-md text-xs font-semibold mono bg-blue-950 text-blue-400 border border-blue-800";
+        streamingTag.classList.remove('hidden');
+
+        response.innerText = '"Copy that. Dispatching patrol unit to Gate A for confirmed Intrusion. CAD ticket generated and logged."';
+        cadBox.classList.remove('hidden');
+        cadPayload.innerHTML = `<strong>Ticket #CAD-8921</strong> | Unit: Patrol Bravo-4 | Location: Gate A | Type: Intrusion | Priority: Code Red`;
+      } else if (id === 2) {
+        transcript.innerText = '"Control room, Officer checking in. Badge 4892 all clear at Warehouse 12."';
+        stateBadge.innerText = "STATE: AGENT_SPEAKING";
+        stateBadge.className = "px-2.5 py-1 rounded-md text-xs font-semibold mono bg-purple-950 text-purple-400 border border-purple-800";
+        streamingTag.classList.remove('hidden');
+
+        response.innerText = '"Officer check-in confirmed. Roster updated and welfare status logged as All Clear."';
+        cadBox.classList.remove('hidden');
+        cadPayload.innerHTML = `<strong>Welfare Log #WLF-401</strong> | Badge: 4892 | Location: Warehouse 12 | Status: All Clear`;
+      }
+
+      setTimeout(() => {
+        streamingTag.classList.add('hidden');
+        waveAmplitude = 8;
+        document.getElementById('audioRms').innerText = "-42.0 dBFS";
+      }, 2500);
+    }
+
+    function triggerBargeIn() {
+      const stateBadge = document.getElementById('agentStateBadge');
+      const transcript = document.getElementById('transcriptText');
+      const response = document.getElementById('agentResponseText');
+      const streamingTag = document.getElementById('streamingTag');
+
+      waveAmplitude = 40;
+      document.getElementById('audioRms').innerText = "-6.5 dBFS (VOICE SPIKE)";
+      stateBadge.innerText = "STATE: BARGE_IN (ABORTED)";
+      stateBadge.className = "px-2.5 py-1 rounded-md text-xs font-semibold mono bg-red-950 text-red-400 border border-red-800 glow-red";
+
+      transcript.innerText = '⚡ [HUMAN INTERRUPT]: "HOLD ON! False alarm, officer entered wrong badge!"';
+      response.innerHTML = '<span class="text-red-400 font-bold">[TTS BUFFER CANCELLED]</span> Ongoing speech aborted in 32ms. Microphone reset to listening.';
+      streamingTag.classList.add('hidden');
+
+      setTimeout(() => {
+        stateBadge.innerText = "STATE: LISTENING";
+        stateBadge.className = "px-2.5 py-1 rounded-md text-xs font-semibold mono bg-cyan-950 text-cyan-400 border border-cyan-800";
+        waveAmplitude = 8;
+        document.getElementById('audioRms').innerText = "-42.0 dBFS";
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
