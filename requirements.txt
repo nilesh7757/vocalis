@@ -1,0 +1,2 @@
+# Minimal dependencies (Engine runs on standard library + numpy)
+numpy>=1.23.0
